@@ -122,16 +122,17 @@ module DataMapper
       # FIXME
       # copied unchanged from activerecord
       def disable_referential_integrity(repository = :default)
+        ignore_tables = %w{ geometry_columns spatial_ref_sys } # fast hardcoded fix for postgis extension
         if supports_disable_referential_integrity? then
           execute(storage_names(repository).collect do |name|
-            "ALTER TABLE #{quote_name(name)} DISABLE TRIGGER ALL"
+            "ALTER TABLE #{quote_name(name)} DISABLE TRIGGER ALL" unless ignore_tables.include?(name)
           end.join(";"))
         end
         yield
       ensure
         if supports_disable_referential_integrity? then
           execute(storage_names(repository).collect do |name|
-            "ALTER TABLE #{quote_name(name)} ENABLE TRIGGER ALL"
+            "ALTER TABLE #{quote_name(name)} ENABLE TRIGGER ALL" unless ignore_tables.include?(name)
           end.join(";"))
         end
       end
